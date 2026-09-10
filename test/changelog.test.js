@@ -27,12 +27,12 @@ function cliff(...args) {
 
 test('notes preserve explanations and visible footers without duplicating migration instructions', () => {
   const notes = cliff();
-  assert.match(notes, /<details>[\s\S]*Keep \*\*formatting\*\*[\s\S]*<\/details>/);
+  assert.match(notes, /Keep \*\*formatting\*\*/);
   assert.match(notes, /- Preserve the first outcome\./);
-  assert.match(notes, /`{3,}sh\nprintf 'example'/);
-  const visible = notes.slice(0, notes.indexOf('<details>'));
-  assert.match(visible, /\*\*Security:\*\* Reject the unsafe form\./);
-  assert.match(visible, /\*\*Deprecated:\*\* Use the new spelling\./);
+  assert.match(notes, /`{3,}sh\n[ \t]*printf 'example'/);
+  const visible = notes.replace(/<details(?: open)?>[\s\S]*?<\/details>/g, '');
+  assert.match(visible, /\*\*Security:\*\*[\s\S]*Reject the unsafe form\./);
+  assert.match(visible, /\*\*Deprecated:\*\*[\s\S]*Use the new spelling\./);
   assert.match(visible, /\*\*Fixes:\*\* \\?#123/);
   assert.equal(notes.split('Use the replacement input.').length - 1, 1);
 });
@@ -61,4 +61,31 @@ test('an empty range has no release heading', () => {
 
 test('the first calculated version matches the supported tag format', () => {
   assert.equal(cliff('--bumped-version').trim(), 'v0.1.0');
+});
+
+test('notes classify outcomes and escape HTML in titles', () => {
+  const notes = cliff('--with-commit', 'feat: handle <input> & "quoted" values\n\nExplain **why**.');
+  assert.match(notes, /handle \\<input\\> & "quoted" values/);
+  assert.ok(notes.indexOf('Added') < notes.indexOf('Fixed'));
+  assert.ok(notes.indexOf('Breaking:') < notes.indexOf('Added'));
+  assert.doesNotMatch(notes, /### .*Documentation/);
+  assert.doesNotMatch(notes, /\[\]\(/);
+});
+
+test('the Summary expands into Details without losing Markdown or footer notices', () => {
+  const notes = cliff('--with-commit', 'feat: add profiles\n\n## Summary\n\nSwitch profiles without restarting.\n\n- Preserve connections.\n- Keep settings.\n\n## Details\n\nImplementation **rationale**.');
+  const visible = notes.replace(/<details>\s*(<summary>[\s\S]*?<\/summary>)[\s\S]*?<\/details>/g, '$1');
+  assert.match(visible, /Switch profiles without restarting/);
+  assert.match(visible, /- Preserve connections/);
+  assert.doesNotMatch(visible, /Implementation/);
+  assert.match(notes, /<details>[\s\S]*Implementation \*\*rationale\*\*/);
+  assert.equal(notes.split('Switch profiles without restarting.').length - 1, 1);
+  assert.ok(visible.includes('Keep **formatting**')); // Historical unstructured records remain intact.
+  assert.doesNotMatch(notes, /## Summary|## Details|Change details/);
+});
+
+test('CRLF section markers render the same disclosure', () => {
+  const notes = cliff('--with-commit', 'feat: add workspaces\r\n\r\n## Summary\r\n\r\nSwitch workspaces.\r\n\r\n## Details\r\n\r\nRetain connections.');
+  assert.match(notes, /<summary>[\s\S]*Switch workspaces/);
+  assert.match(notes, /<\/summary>[\s\S]*Retain connections/);
 });

@@ -489,6 +489,18 @@ ${body}`);
       errors.push("Use a colon and space for a breaking footer: BREAKING CHANGE: explanation.");
     }
   }
+  const explanation = commit.body?.replace(/\r\n/g, "\n").trim();
+  if (explanation) {
+    const headings = explanation.match(/^## .*$/gm) ?? [];
+    if (!explanation.startsWith("## Summary\n\n") || !["## Summary", "## Summary|## Details"].includes(headings.join("|"))) {
+      errors.push("Start the explanation with ## Summary, then optionally ## Details. Use ### for subsections; indent literal examples of these reserved headings.");
+    } else {
+      const sections = explanation.replace(/^## Summary\n\n/, "").split("\n\n## Details\n\n");
+      if (sections.some((section) => !section.trim()) || headings.length === 2 && sections.length !== 2) {
+        errors.push("Give each section content and separate its heading with blank lines. Omit Details when there is nothing to add.");
+      }
+    }
+  }
   const breaking = commit.notes.filter((note) => /^BREAKING[ -]CHANGE$/i.test(note.title));
   if (commit.breaking && !breaking.length) {
     errors.push("The title has !; add BREAKING CHANGE: explaining the affected contract and migration.");
