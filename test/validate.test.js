@@ -10,7 +10,7 @@ const pass = [
   ['short PR', { title: 'docs: correct a typo' }],
   ['null body', { title: 'fix: preserve existing records', body: null }],
   ['scope', { title: 'feat(@scope/package): support structured input' }],
-  ['large Markdown body', { title: 'feat: add import and export', body: '## Import\n\n- Read JSON files.\n- Preserve Unicode.\n\n## Export\n\n| Format | Support |\n| --- | --- |\n| JSON | Yes |\n\n```js\nconst example = { name: "hello" };\n```\n\n<details><summary>Context</summary>\n\nThe previous format remains supported.\n\n</details>' }],
+  ['large Markdown body', { title: 'feat: add import and export', body: '### Import\n\n- Read JSON files.\n- Preserve Unicode.\n\n### Export\n\n| Format | Support |\n| --- | --- |\n| JSON | Yes |\n\n```js\nconst example = { name: "hello" };\n```\n\n<details><summary>Context</summary>\n\nThe previous format remains supported.\n\n</details>' }],
   ['breaking with migration', { title: 'feat(api)!: replace the legacy endpoint', body: 'Accept structured records.\n\nBREAKING CHANGE: The legacy endpoint is removed.\nUse /records instead.\nRefs: #123' }],
   ['alternate breaking token', { title: 'build!: drop an old runtime', body: 'BREAKING-CHANGE: Install the supported runtime.' }],
   ['optional enrichment', { title: 'fix(parser): reject malformed records', body: 'Return a validation error.\n\nSecurity: Invalid records no longer terminate the process.\nDeprecated: The legacy flag remains supported; use --format.\nFixes #123' }],
@@ -22,9 +22,20 @@ const pass = [
   ['indented literal footers', { title: 'docs: explain annotations', body: 'Example syntax:\n\n    Security:\n    BREAKING CHANGE: example\n' }],
   ['CRLF', { title: 'fix!: replace the file format', body: 'Read the new format.\r\n\r\nBREAKING CHANGE: Convert old files.\r\nRefs: #1' }],
 ];
+for (const [, record] of pass) {
+  if (record.body && !/^(?:BREAKING[ -]CHANGE|Security|Deprecated|security)(?::| #)/.test(record.body)) {
+    record.body = `## Summary\n\n${record.body}`;
+  }
+}
+pass.push(['summary and details', { title: 'feat: add profiles', body: '## Summary\n\nSwitch profiles.\n\n## Details\n\n### Connections\n\nKeep requests running.\n\nSecurity: Logs omit credentials.' }]);
 for (const [name, record] of pass) test(name, () => assert.deepEqual(validate(record), []));
 
 const fail = [
+  ['missing summary heading', { title: 'feat: add profiles', body: 'Switch profiles.' }, /## Summary/],
+  ['empty summary', { title: 'feat: add profiles', body: '## Summary\n\n## Details\n\nImplementation.' }, /content/],
+  ['empty details', { title: 'feat: add profiles', body: '## Summary\n\nSwitch profiles.\n\n## Details' }, /content/],
+  ['duplicate summary', { title: 'feat: add profiles', body: '## Summary\n\nOne.\n\n## Summary\n\nTwo.' }, /## Summary/],
+  ['reserved marker in example', { title: 'docs: explain records', body: '## Summary\n\nExample:\n\n```md\n## Details\n```' }, /content/],
   ['non-Conventional title', { title: 'Update records' }, /type\(scope\)/],
   ['blank scope', { title: 'fix( ): preserve records' }, /type\(scope\)/],
   ['missing subject', { title: 'fix: ' }, /type\(scope\)/],
@@ -74,7 +85,7 @@ test('packaged action rejects a missing PR event', () => {
 });
 
 test('PR contents cannot inject workflow commands or execute shell text', () => {
-  const record = { title: 'fix: preserve records', body: '$(exit 99)\n`exit 99`\n::error::untrusted text' };
+  const record = { title: 'fix: preserve records', body: '## Summary\n\n$(exit 99)\n`exit 99`\n::error::untrusted text' };
   const result = run('dist/index.js', { pull_request: record }, true);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout + result.stderr, '');
