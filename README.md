@@ -77,7 +77,8 @@ The [git-cliff preset](cliff.toml) renders the same records as concise summaries
 with expandable Markdown explanations. Migration instructions and all other
 footers remain visible, including security and deprecation annotations. Entries
 link to their PRs when GitHub metadata is available, otherwise to their commits.
-Repository identity comes from the checkout's Git remote.
+Repository identity comes from the checkout's Git remote. On a new local branch,
+configure its upstream or pass `--github-repo owner/repo` before rendering.
 
 Use git-cliff 2.14.1 or later and pin the preset to a reviewed full commit SHA:
 
