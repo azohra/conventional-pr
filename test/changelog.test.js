@@ -58,3 +58,7 @@ test('an empty range has no release heading', () => {
   ], { encoding: 'utf8' });
   assert.equal(notes.trim(), '');
 });
+
+test('the first calculated version matches the supported tag format', () => {
+  assert.equal(cliff('--bumped-version').trim(), 'v0.1.0');
+});

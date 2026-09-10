@@ -90,7 +90,9 @@ The same option works with `--unreleased`, `--tag`, `--bumped-version` and
 `--context`. JSON preserves the parsed records for other consumers. The preset
 includes only Conventional commits, groups entries by type, and recognises
 `vMAJOR.MINOR.PATCH` tags on the current branch. It uses git-cliff's default bump
-rules with breaking changes incrementing the minor version before v1.
+rules with breaking changes incrementing the minor version before v1. When no
+matching tags exist, the first version is `v0.1.0`; existing matching tags remain
+the basis for subsequent versions.
 
 `--config-url` replaces local configuration and fetches the preset on every run,
 even with `--offline`; that flag disables remote metadata requests. Pinning fixes
