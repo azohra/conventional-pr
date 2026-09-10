@@ -71,6 +71,33 @@ their syntax in code examples, so a Conventional Commit parser does not treat
 them as annotations on the change. Review still owns the accuracy and completeness
 of the explanation.
 
+## Generate changelogs
+
+The [git-cliff preset](cliff.toml) renders the same records as concise summaries
+with expandable Markdown explanations. Migration instructions and all other
+footers remain visible, including security and deprecation annotations. Entries
+link to their PRs when GitHub metadata is available, otherwise to their commits.
+Repository identity comes from the checkout's Git remote.
+
+Use git-cliff 2.14.1 or later and pin the preset to a reviewed full commit SHA:
+
+```sh
+git cliff --config-url https://raw.githubusercontent.com/azohra/conventional-pr/<full-commit-sha>/cliff.toml
+```
+
+The same option works with `--unreleased`, `--tag`, `--bumped-version` and
+`--context`. JSON preserves the parsed records for other consumers. The preset
+includes only Conventional commits, groups entries by type, and recognises
+`vMAJOR.MINOR.PATCH` tags on the current branch. It uses git-cliff's default bump
+rules with breaking changes incrementing the minor version before v1.
+
+`--config-url` replaces local configuration and fetches the preset on every run,
+even with `--offline`; that flag disables remote metadata requests. Pinning fixes
+the configuration contents, not its availability. Keep publication commands in
+the consuming repository. Use git-cliff's native flags or
+[environment overrides](https://git-cliff.org/docs/configuration/#environment-configuration-overrides)
+for a different tag pattern or version policy.
+
 ## Local use and development
 
 ```sh

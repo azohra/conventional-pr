@@ -1,6 +1,7 @@
 [tools]
 node = "24.21.0"
 actionlint = "1.7.12"
+"aqua:orhun/git-cliff" = "2.14.1"
 
 [tasks.setup]
 description = "Install development dependencies"
@@ -16,7 +17,7 @@ run = "node src/cli.js"
 [tasks.test]
 description = "Test PR validation and the packaged action"
 depends = ["setup"]
-run = "node --test test/validate.test.js"
+run = "node --test test/*.test.js"
 
 [tasks.build]
 description = "Bundle the action for GitHub"
