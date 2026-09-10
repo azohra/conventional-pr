@@ -45,3 +45,16 @@ test('structured output retains the body and every footer', () => {
     'BREAKING CHANGE', 'Security', 'Deprecated', 'Fixes',
   ]);
 });
+
+test('the first release links to its tag instead of an empty comparison base', () => {
+  const notes = cliff('--tag', 'v1.0.0');
+  assert.match(notes, /\/releases\/tag\/v1\.0\.0/);
+  assert.doesNotMatch(notes, /\/compare\//);
+});
+
+test('an empty range has no release heading', () => {
+  const notes = execFileSync('git-cliff', [
+    '--offline', '--config', 'cliff.toml', 'HEAD..HEAD',
+  ], { encoding: 'utf8' });
+  assert.equal(notes.trim(), '');
+});
