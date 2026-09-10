@@ -4,6 +4,7 @@ breaking_always_bump_major = false
 [changelog]
 header = ""
 body = """
+{% if commits | length > 0 %}
 {% if version %}## [{{ version | trim_start_matches(pat="v") }}]
 {% else %}## Unreleased
 {% endif %}
@@ -35,7 +36,12 @@ body = """
 {% endif %}
 {% endfor %}{% endfor %}
 {% if version %}
+{% if previous.version %}
 [{{ version | trim_start_matches(pat="v") }}]: https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/compare/{{ previous.version }}...{{ version }}
+{% else %}
+[{{ version | trim_start_matches(pat="v") }}]: https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/releases/tag/{{ version }}
+{% endif %}
+{% endif %}
 {% endif %}
 """
 trim = true
