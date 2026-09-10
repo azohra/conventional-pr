@@ -1,0 +1,3 @@
+node_modules/
+mise*.lock
+.DS_Store

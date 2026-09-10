@@ -1,0 +1,8 @@
+{
+  "name": "conventional-pr",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "dependencies": { "conventional-commits-parser": "7.1.2" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

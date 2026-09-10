@@ -1,0 +1,5 @@
+name: Conventional PR
+description: Validate the PR title and body as one Conventional squash message.
+runs:
+  using: node24
+  main: dist/index.js
