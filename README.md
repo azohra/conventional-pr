@@ -117,11 +117,15 @@ version impacts or inferred classifications.
 Repository identity comes from the checkout's Git remote. On a new local branch,
 configure its upstream or pass `--github-repo owner/repo` before rendering.
 
-Use git-cliff 2.14.1 or later and pin the preset to a reviewed full commit SHA:
+Use git-cliff 2.14.1 or later. Follow the maintained preset on main:
 
 ```sh
-git cliff --config-url https://raw.githubusercontent.com/azohra/conventional-pr/<full-commit-sha>/cliff.toml
+git cliff --config-url https://raw.githubusercontent.com/azohra/conventional-pr/main/cliff.toml
 ```
+
+Use a full commit SHA instead of `main` when a fixed configuration is required.
+The preset includes version rules as well as presentation; following main adopts
+changes to both on the next invocation. Published release notes are not rewritten.
 
 The same option works with `--unreleased`, `--tag`, `--bumped-version` and
 `--context`. JSON preserves the parsed records for other consumers. The preset
