@@ -57,13 +57,17 @@ when the title or body changes.
 ## Bodies and annotations
 
 Write the PR for someone deciding what changed. Start its explanation with
-`## Summary`, then add `## Details` when the change needs supporting context.
+`## Summary`, then add `## Details` only when the summary leaves a question
+worth answering.
 
-- **Summary:** capabilities, corrected behaviour, affected users or workflows,
-  meaningful limitations and required action. Use paragraphs or a list; group
-  distinct outcomes in a large PR under `###` subheadings.
-- **Details:** rationale, implementation choices, tradeoffs and examples needed
-  to understand or review the work. Omit this section when the summary is enough.
+- **Summary:** what someone scanning release notes needs to decide whether the
+  change affects them: what behaves differently, who is affected, and any
+  limitation or required action. The changelog keeps this text visible on every
+  entry, so how the change is built belongs elsewhere. Group distinct outcomes
+  in a large PR under `###` subheadings.
+- **Details:** what a reader who expanded the entry is looking for: the
+  rationale, tradeoffs and implementation choices a reviewer needs. Omit the
+  section rather than restating the summary in technical terms.
 - **Footers:** structured compatibility information, security consequences,
   deprecations, issue references and attribution. Put them after the body with
   a separating blank line.
@@ -73,11 +77,11 @@ For example, `feat(profiles): switch profiles without restarting`:
 ```text
 ## Summary
 
-Switch between saved profiles while the service keeps running. Existing requests finish without interruption.
+Switch between saved profiles while the service keeps running. Existing requests finish without interruption, and a failed switch leaves the previous profile active.
 
 ## Details
 
-Resolve the selected profile before replacing the active connection pool. A failed switch leaves the previous profile active.
+Resolve the selected profile before replacing the active connection pool.
 
 Refs: #123
 ```
