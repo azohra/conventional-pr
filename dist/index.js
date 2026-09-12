@@ -489,18 +489,6 @@ ${body}`);
       errors.push("Use a colon and space for a breaking footer: BREAKING CHANGE: explanation.");
     }
   }
-  const explanation = commit.body?.replace(/\r\n/g, "\n").trim();
-  if (explanation) {
-    const headings = explanation.match(/^## .*$/gm) ?? [];
-    if (!explanation.startsWith("## Summary\n\n") || !["## Summary", "## Summary|## Details"].includes(headings.join("|"))) {
-      errors.push("Start the explanation with ## Summary, then optionally ## Details. Use ### for subsections; indent literal examples of these reserved headings.");
-    } else {
-      const sections = explanation.replace(/^## Summary\n\n/, "").split("\n\n## Details\n\n");
-      if (sections.some((section) => !section.trim()) || headings.length === 2 && sections.length !== 2) {
-        errors.push("Give each section content and separate its heading with blank lines. Omit Details when there is nothing to add.");
-      }
-    }
-  }
   const breaking = commit.notes.filter((note) => /^BREAKING[ -]CHANGE$/i.test(note.title));
   if (commit.breaking && !breaking.length) {
     errors.push("The title has !; add BREAKING CHANGE: explaining the affected contract and migration.");
@@ -529,16 +517,16 @@ ${body}`);
 
 // src/index.js
 try {
-  if (!process.env.GITHUB_EVENT_PATH) throw new Error("A pull request event is required.");
-  const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8"));
-  if (!event.pull_request) throw new Error("A pull request event is required.");
-  const errors = validate(event.pull_request);
+  const input = process.env["INPUT_PULL-REQUEST"];
+  const record = input?.trim() ? JSON.parse(input) : JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, "utf8")).pull_request;
+  if (!record) throw new Error("A pull request record is required.");
+  const errors = validate(record);
   for (const error of errors) {
     const message = error.replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A");
     console.error(`::error title=Conventional PR::${message}`);
   }
   if (errors.length) process.exitCode = 1;
 } catch {
-  console.error("::error title=Conventional PR::Could not read a valid pull request event.");
+  console.error("::error title=Conventional PR::Could not read a valid pull request record.");
   process.exitCode = 1;
 }
