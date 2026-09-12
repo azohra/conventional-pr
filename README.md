@@ -11,11 +11,13 @@ The action checks:
 - Both `!` and a nonempty uppercase `BREAKING CHANGE:` or `BREAKING-CHANGE:`
   footer when a breaking change is declared.
 - A blank line separating the explanation from footers.
+- A nonempty `## Summary` section for explanations, followed by optional
+  nonempty `## Details`.
 - Nonempty `Security:` and `Deprecated:` annotations when supplied.
 
-A title that fully explains the change needs no body. Explanations are free-form
-Markdown; no template, reserved headings or line-length limit is required.
-Additional footer names are accepted.
+A title that fully explains the change needs no body. When there is an
+explanation, use the section structure below. No PR template file or line-length
+limit is required. Markdown and additional footer names are accepted.
 
 These rules build on [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/).
 The fixed lowercase types, use of both breaking markers and optional annotation
@@ -52,23 +54,32 @@ dependency installation in the consuming repository. It reports violations with
 GitHub error annotations and a failing exit code. The `edited` event reruns it
 when the title or body changes.
 
-For another event, pass a JSON object with `title` and `body` through the
-`pull-request` input. The caller retrieves the record and associates the check
-with the correct commit; the action validates that record with the same rules.
-This also supports generated release PRs without rewriting their notes or
-exempting them from validation.
-
 ## Bodies and annotations
 
-Describe what changed and why, including limitations and required actions.
-Use headings when they help a reader navigate a larger change. Put structured
-compatibility information, issue references and attribution in footers after
-the explanation, separated by a blank line.
+Write the PR for someone deciding what changed. Start its explanation with
+`## Summary`, then add `## Details` only when the summary leaves a question
+worth answering.
+
+- **Summary:** what someone scanning release notes needs to decide whether the
+  change affects them: what behaves differently, who is affected, and any
+  limitation or required action. The changelog keeps this text visible on every
+  entry, so how the change is built belongs elsewhere. Group distinct outcomes
+  in a large PR under `###` subheadings.
+- **Details:** what a reader who expanded the entry is looking for: the
+  rationale, tradeoffs and implementation choices a reviewer needs. Omit the
+  section rather than restating the summary in technical terms.
+- **Footers:** structured compatibility information, security consequences,
+  deprecations, issue references and attribution. Put them after the body with
+  a separating blank line.
 
 For example, `feat(profiles): switch profiles without restarting`:
 
 ```text
+## Summary
+
 Switch between saved profiles while the service keeps running. Existing requests finish without interruption, and a failed switch leaves the previous profile active.
+
+## Details
 
 Resolve the selected profile before replacing the active connection pool.
 
@@ -77,6 +88,11 @@ Refs: #123
 
 Write paragraphs without hard line wrapping. Preserve intentional lists, tables
 and code blocks.
+The exact `## Summary` and `## Details` lines are reserved section markers.
+Separate headings from content with a blank line, use `###` for subsections,
+and indent literal examples of the reserved markers, including in code blocks.
+The validator rejects ambiguous, duplicate, reordered or empty sections.
+These are record-format conventions layered on Conventional Commits.
 
 `Security:` records a specific security consequence or known advisory.
 `Deprecated:` identifies supported behaviour being retired and its replacement.
@@ -93,14 +109,13 @@ and Maintenance groups, with empty groups omitted. These correspond to `feat`,
 `fix`, `perf`, `docs` and the remaining types. Entries link to their PR or commit;
 a contributors line credits GitHub commit authors when available.
 
-When a body uses `## Summary` and `## Details`, the preset keeps its Summary
-visible and expands it into its Details. An entry with no Details has no
-disclosure. Footers remain visible outside the expansion; the template does
-not infer reviewers or coauthors. Bodies without the section structure render
-intact. JSON retains original bodies and footers.
+The Summary stays visible and expands directly into its Details. An entry with
+no Details has no disclosure. Footers remain visible outside the expansion;
+the template does not infer reviewers or coauthors. Historical bodies without
+the section structure render intact. JSON retains original bodies and footers.
 
 One PR is one entry in the group selected by its title. A mixed PR should explain
-each material outcome in its body; body sections do not create separate
+each material outcome in its Summary; body sections do not create separate
 version impacts or inferred classifications.
 
 Repository identity comes from the checkout's Git remote. On a new local branch,
