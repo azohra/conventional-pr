@@ -22,20 +22,12 @@ const pass = [
   ['indented literal footers', { title: 'docs: explain annotations', body: 'Example syntax:\n\n    Security:\n    BREAKING CHANGE: example\n' }],
   ['CRLF', { title: 'fix!: replace the file format', body: 'Read the new format.\r\n\r\nBREAKING CHANGE: Convert old files.\r\nRefs: #1' }],
 ];
-for (const [, record] of pass) {
-  if (record.body && !/^(?:BREAKING[ -]CHANGE|Security|Deprecated|security)(?::| #)/.test(record.body)) {
-    record.body = `## Summary\n\n${record.body}`;
-  }
-}
 pass.push(['summary and details', { title: 'feat: add profiles', body: '## Summary\n\nSwitch profiles.\n\n## Details\n\n### Connections\n\nKeep requests running.\n\nSecurity: Logs omit credentials.' }]);
+pass.push(['release collector', { title: 'chore(release): prepare releases from main', body: '<!-- release notes -->\n\n<details><summary>site: 0.1.0</summary>\n\n## 0.1.0\n\n### Features\n\n* improve installation ([#42](https://github.com/example/project/pull/42))\n</details>' }]);
+pass.push(['headings in literal examples', { title: 'docs: explain records', body: 'Example:\n\n```md\n## Details\n```' }]);
 for (const [name, record] of pass) test(name, () => assert.deepEqual(validate(record), []));
 
 const fail = [
-  ['missing summary heading', { title: 'feat: add profiles', body: 'Switch profiles.' }, /## Summary/],
-  ['empty summary', { title: 'feat: add profiles', body: '## Summary\n\n## Details\n\nImplementation.' }, /content/],
-  ['empty details', { title: 'feat: add profiles', body: '## Summary\n\nSwitch profiles.\n\n## Details' }, /content/],
-  ['duplicate summary', { title: 'feat: add profiles', body: '## Summary\n\nOne.\n\n## Summary\n\nTwo.' }, /## Summary/],
-  ['reserved marker in example', { title: 'docs: explain records', body: '## Summary\n\nExample:\n\n```md\n## Details\n```' }, /content/],
   ['non-Conventional title', { title: 'Update records' }, /type\(scope\)/],
   ['blank scope', { title: 'fix( ): preserve records' }, /type\(scope\)/],
   ['missing subject', { title: 'fix: ' }, /type\(scope\)/],
@@ -54,7 +46,7 @@ const fail = [
 ];
 for (const [name, record, expected] of fail) test(name, () => assert.match(validate(record).join('\n'), expected));
 
-function run(entry, record, action = false) {
+function run(entry, record, action = false, input = '') {
   const directory = mkdtempSync(join(tmpdir(), 'conventional-pr-'));
   try {
     const eventPath = join(directory, 'event.json');
@@ -63,7 +55,7 @@ function run(entry, record, action = false) {
       cwd: directory,
       input: JSON.stringify(record),
       encoding: 'utf8',
-      env: { ...process.env, GITHUB_EVENT_PATH: action ? eventPath : '' },
+      env: { ...process.env, GITHUB_EVENT_PATH: action ? eventPath : '', 'INPUT_PULL-REQUEST': input },
     });
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -82,6 +74,19 @@ test('local CLI and packaged action agree on all cases outside the checkout', ()
 
 test('packaged action rejects a missing PR event', () => {
   assert.equal(run('dist/index.js', {}, true).status, 1);
+});
+
+test('explicit PR input validates dispatched records without altering the event', () => {
+  for (const [, record] of [...pass, ...fail]) {
+    const result = run('dist/index.js', { inputs: { pr: '42' } }, true, JSON.stringify(record));
+    assert.equal(result.status, validate(record).length ? 1 : 0, result.stderr);
+  }
+});
+
+test('invalid explicit input fails instead of falling back to the event', () => {
+  for (const input of ['{', 'null', '{}', '[]', '"text"']) {
+    assert.equal(run('dist/index.js', { pull_request: { title: 'fix: valid event' } }, true, input).status, 1);
+  }
 });
 
 test('PR contents cannot inject workflow commands or execute shell text', () => {
