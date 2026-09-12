@@ -1,9 +1,5 @@
 name: Conventional PR
 description: Validate the PR title and body as one Conventional squash message.
-inputs:
-  pull-request:
-    description: JSON object with title and body; defaults to the pull request event.
-    required: false
 runs:
   using: node24
   main: dist/index.js
